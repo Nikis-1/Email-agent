@@ -4,9 +4,8 @@ import google.generativeai as genai
 import json
 import os
 
-client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
-
-model = client.models.generate_content
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 with open("prompts.json", "r") as f:
     PROMPTS = json.load(f)
@@ -188,3 +187,4 @@ with tab3:
             json.dump(PROMPTS, f, indent=4)
 
         st.success("Prompts saved!")
+
