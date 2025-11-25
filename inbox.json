@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "from": "manager@company.com",
+    "subject": "Project Deadline Reminder",
+    "timestamp": "2025-02-21 09:15",
+    "body": "Hi, we need the final draft of the project report by Tuesday. Please confirm."
+  },
+  {
+    "id": 2,
+    "from": "hr@company.com",
+    "subject": "Meeting Request",
+    "timestamp": "2025-02-20 11:00",
+    "body": "Can you join a quick sync-up meeting tomorrow around 3 PM?"
+  },
+  {
+    "id": 3,
+    "from": "newsletter@techdaily.com",
+    "subject": "Your Weekly Tech Newsletter",
+    "timestamp": "2025-02-20 08:30",
+    "body": "Here are this week's top tech stories..."
+  },
+  {
+    "id": 4,
+    "from": "notifications@shop.com",
+    "subject": "Discounts Available!",
+    "timestamp": "2025-02-19 19:00",
+    "body": "Huge discounts on electronics this week only!"
+  },
+  {
+    "id": 5,
+    "from": "lead@startup.com",
+    "subject": "Task Update Needed",
+    "timestamp": "2025-02-19 12:10",
+    "body": "Please send me the update on the API integration."
+  },
+  {
+    "id": 6,
+    "from": "spam@weirdmail.ru",
+    "subject": "CLAIM YOUR FREE MONEY",
+    "timestamp": "2025-02-18 17:45",
+    "body": "Click here to win $10,000 now!"
+  },
+  {
+    "id": 7,
+    "from": "teammate@company.com",
+    "subject": "Code Review",
+    "timestamp": "2025-02-18 16:00",
+    "body": "Can you review my PR before 6 PM?"
+  },
+  {
+    "id": 8,
+    "from": "client@business.com",
+    "subject": "Agenda for Tomorrow's Call",
+    "timestamp": "2025-02-18 10:30",
+    "body": "Please prepare a short demo for tomorrow's meeting."
+  },
+  {
+    "id": 9,
+    "from": "updates@company.com",
+    "subject": "System Maintenance",
+    "timestamp": "2025-02-17 09:00",
+    "body": "Servers will be down for maintenance on Sunday."
+  },
+  {
+    "id": 10,
+    "from": "friend@gmail.com",
+    "subject": "Check this out!",
+    "timestamp": "2025-02-16 20:00",
+    "body": "Look at this funny video..."
+  }
+]
