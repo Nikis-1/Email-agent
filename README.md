@@ -50,6 +50,7 @@ Choose the context mode:
 ---
 
 ## 🗂 Project Structure
+```graphql
 email-agent
 │
 ├── app.py # Main Streamlit application
@@ -60,6 +61,7 @@ email-agent
 ├── prompts.json # Customizable AI prompts
 │
 └── .gitignore # GitHub ignored files
+```
 
 ---
 
@@ -115,14 +117,11 @@ Changes appear immediately when the app reloads.
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome!  
-Open issues or submit PRs to improve prompts, UI, or model integration.
+## 📝 Author
+**Nikita Sanganeria** nikitasanganeria1@gmail.com
 
 ---
 
-## ⭐ Support
+## 📄 License
+**MIT License**
 
-If you find this project useful, consider starring the repo 🌟  
-Your support helps the project grow and improve!
