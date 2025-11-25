@@ -66,7 +66,7 @@ with tab1:
 
     selected_subject = st.selectbox(
         "Select an email",
-        [e["subject"] for e in MOCK_EMAILS]
+        [f"{e['subject']} — {e['from']}" for e in MOCK_EMAILS]
     )
 
     email = next(e for e in MOCK_EMAILS if e["subject"] == selected_subject)
@@ -74,7 +74,10 @@ with tab1:
     state = st.session_state.email_data[email_id]
 
     st.subheader("Email Preview")
+    st.write(f"**Subject:** {email['subject']}")
     st.write(f"**From:** {email['from']}")
+    st.write(f"**Timestamp:** {email['timestamp']}")
+    st.write("---")
     st.write(email["body"])
 
     if st.button("Categorize Email"):
@@ -131,7 +134,7 @@ with tab2:
     if mode == "Single Email":
         selected_subject2 = st.selectbox(
             "Select email for context",
-            [e["subject"] for e in MOCK_EMAILS],
+            [f"{e['subject']} — {e['from']}" for e in MOCK_EMAILS],
             key="agent_email"
         )
         e2 = next(e for e in MOCK_EMAILS if e["subject"] == selected_subject2)
@@ -187,4 +190,5 @@ with tab3:
             json.dump(PROMPTS, f, indent=4)
 
         st.success("Prompts saved!")
+
 
