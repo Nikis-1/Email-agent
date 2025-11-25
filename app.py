@@ -77,7 +77,7 @@ with tab1:
     st.write(f"**Subject:** {email['subject']}")
     st.write(f"**From:** {email['from']}")
     st.write(f"**Timestamp:** {email['timestamp']}")
-    st.write(email["body"])
+    st.write(f"**Body:** {email['body']}")
     st.write("---")
 
     if st.button("Categorize Email"):
@@ -190,6 +190,7 @@ with tab3:
             json.dump(PROMPTS, f, indent=4)
 
         st.success("Prompts saved!")
+
 
 
 
