@@ -3,7 +3,7 @@ import google.generativeai as genai
 import json
 import os
 
-genai.configure(api_key="AIzaSyCSN5hjb7hQKs6l6mtTunQWNUkfr7_AetY")
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 model = genai.GenerativeModel("gemini-2.0-flash")
 
 
@@ -193,6 +193,7 @@ with tab3:
             json.dump(updated, f, indent=4)
 
         st.success("Prompts saved!")
+
 
 
 
