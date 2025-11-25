@@ -77,8 +77,8 @@ with tab1:
     st.write(f"**Subject:** {email['subject']}")
     st.write(f"**From:** {email['from']}")
     st.write(f"**Timestamp:** {email['timestamp']}")
-    st.write("---")
     st.write(email["body"])
+    st.write("---")
 
     if st.button("Categorize Email"):
         result = ask_gemini(PROMPTS["categorize_prompt"], email)
@@ -190,6 +190,7 @@ with tab3:
             json.dump(PROMPTS, f, indent=4)
 
         st.success("Prompts saved!")
+
 
 
 
