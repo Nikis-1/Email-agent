@@ -66,7 +66,7 @@ with tab1:
 
     selected_subject = st.selectbox(
         "Select an email",
-        [f"{e['subject']} — {e['from']}" for e in MOCK_EMAILS]
+        [e["subject"] for e in MOCK_EMAILS]
     )
 
     email = next(e for e in MOCK_EMAILS if e["subject"] == selected_subject)
@@ -134,7 +134,7 @@ with tab2:
     if mode == "Single Email":
         selected_subject2 = st.selectbox(
             "Select email for context",
-            [f"{e['subject']} — {e['from']}" for e in MOCK_EMAILS],
+            [e["subject"] for e in MOCK_EMAILS],
             key="agent_email"
         )
         e2 = next(e for e in MOCK_EMAILS if e["subject"] == selected_subject2)
@@ -190,5 +190,6 @@ with tab3:
             json.dump(PROMPTS, f, indent=4)
 
         st.success("Prompts saved!")
+
 
 
