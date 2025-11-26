@@ -122,7 +122,7 @@ with tab2:
         e2 = next(e for e in MOCK_EMAILS if e["subject"] == selected_subject2)
 
         st.write("Email Context")
-        st.write(f"From: {e2['from']}")
+        st.write(f"**From:** {e2['from']}")
         st.write(e2["body"])
 
     else:
@@ -174,6 +174,7 @@ with tab3:
             json.dump(PROMPTS, f, indent=4)
 
         st.success("Prompts saved!")
+
 
 
 
