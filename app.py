@@ -6,60 +6,19 @@ import os
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 model = genai.GenerativeModel("gemini-2.0-flash")
 
+with open("prompts.json", "r") as f:
+    PROMPTS = json.load(f)
 
-@st.cache_data
 def load_inbox():
-    """Loads inbox.json once and caches it."""
     inbox_path = os.path.join(os.path.dirname(__file__), "inbox.json")
-    with open(inbox_path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-@st.cache_data
-def load_prompts():
-    """Loads prompts.json."""
-    with open("prompts.json", "r") as f:
-        return json.load(f)
+    try:
+        with open(inbox_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        st.error(f"Failed to load inbox.json: {e}")
+        return []
 
 MOCK_EMAILS = load_inbox()
-PROMPTS = load_prompts()
-
-
-@st.cache_data(show_spinner=False)
-def gemini_call_cached(full_text, cache_key):
-    """LLM call cached to avoid repeated computation."""
-    response = model.generate_content(
-        full_text,
-        safety_settings=None,
-        generation_config={
-            "temperature": 0.2,
-            "top_p": 0.8,
-            "top_k": 40,
-        }
-    )
-    return response.text
-
-
-def ask_gemini(prompt, email=None, all_emails=None):
-    """Formats prompt + calls cached Gemini."""
-    if all_emails:
-        mailbox_str = "\n\n".join(
-            [
-                f"Email #{i+1}\nSubject: {e['subject']}\nFrom: {e['from']}\nBody: {e['body']}"
-                for i, e in enumerate(all_emails)
-            ]
-        )
-        full_text = f"{prompt}\n\nHere is the entire mailbox:\n{mailbox_str}"
-        cache_key = "full_mailbox"
-    else:
-        full_text = (
-            f"{prompt}\n\nEmail:\n"
-            f"Subject: {email['subject']}\nFrom: {email['from']}\nBody: {email['body']}"
-        )
-        cache_key = f"email_{email['id']}"
-
-    return gemini_call_cached(full_text, cache_key)
-
-
 
 if "email_data" not in st.session_state:
     st.session_state.email_data = {e["id"]: {"category": None, "actions": None} for e in MOCK_EMAILS}
@@ -67,28 +26,41 @@ if "email_data" not in st.session_state:
 if "drafts" not in st.session_state:
     st.session_state.drafts = {}
 
-if "replies" not in st.session_state:
-    st.session_state.replies = {}
-
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
+def ask_gemini(prompt, email=None, all_emails=None):
+    if all_emails:
+        inbox_text = "\n\n".join([
+            f"Email #{i+1}\nSubject: {e['subject']}\nFrom: {e['from']}\nBody: {e['body']}"
+            for i, e in enumerate(all_emails)
+        ])
+        text = f"{prompt}\n\nHere is the entire mailbox:\n{inbox_text}"
+    else:
+        text = (
+            f"{prompt}\n\nEmail:\n"
+            f"Subject: {email['subject']}\nFrom: {email['from']}\nBody: {email['body']}"
+        )
 
+    try:
+        response = model.generate_content(
+            text,
+            safety_settings=None,
+            generation_config={"temperature": 0.2, "top_p": 0.8, "top_k": 40}
+        )
+        return response.text
+    except Exception as e:
+        return f"Error: {e}"
 
-tab1, tab2, tab3 = st.tabs(["Inbox", "Agent", "Prompts"])
-
+tab1, tab2, tab3 = st.tabs(["Inbox", "Agent", "Prompt Config"])
 
 with tab1:
     st.title("Inbox Processor")
 
-    selected_subject = st.selectbox(
-        "Select an email",
-        [e["subject"] for e in MOCK_EMAILS]
-    )
-
+    selected_subject = st.selectbox("Select an email", [e["subject"] for e in MOCK_EMAILS])
     email = next(e for e in MOCK_EMAILS if e["subject"] == selected_subject)
-    eid = email["id"]
-    state = st.session_state.email_data[eid]
+    email_id = email["id"]
+    state = st.session_state.email_data[email_id]
 
     st.subheader("Email Preview")
     st.write(f"**Subject:** {email['subject']}")
@@ -98,84 +70,94 @@ with tab1:
     st.write("---")
 
     if st.button("Categorize Email"):
-        state["category"] = ask_gemini(PROMPTS["categorize_prompt"], email=email)
+        result = ask_gemini(PROMPTS["categorize_prompt"], email)
+        state["category"] = result
         st.success("Categorized!")
 
     if state["category"]:
-        st.info(f"**Category:** {state['category']}")
+        st.info(f"Category: {state['category']}")
 
     if st.button("Extract Actions"):
-        state["actions"] = ask_gemini(PROMPTS["action_prompt"], email=email)
+        result = ask_gemini(PROMPTS["action_prompt"], email)
+        state["actions"] = result
         st.success("Actions extracted!")
 
     if state["actions"]:
-        st.markdown("**Extracted Actions:**")
-        st.code(state["actions"])
+        st.markdown("Extracted Actions:")
+        st.code(state["actions"], language="json")
+
+    if "replies" not in st.session_state:
+        st.session_state.replies = {}
 
     if st.button("Generate Reply"):
-        reply = ask_gemini(PROMPTS["reply_prompt"], email=email)
-        st.session_state.replies[eid] = reply
+        reply = ask_gemini(PROMPTS["reply_prompt"], email)
+        st.session_state.replies[email_id] = reply
 
-    if eid in st.session_state.replies:
+    if email_id in st.session_state.replies:
         edited = st.text_area(
             "Edit Reply",
-            st.session_state.replies[eid],
-            key=f"reply_edit_{eid}"
+            st.session_state.replies[email_id],
+            key=f"edit_reply_{email_id}"
         )
 
         if st.button("Save Draft"):
-            st.session_state.drafts[eid] = edited
+            st.session_state.drafts[email_id] = edited
             st.success("Draft saved!")
 
-    if eid in st.session_state.drafts:
-        st.subheader("Saved Draft")
-        st.code(st.session_state.drafts[eid])
-
+    if email_id in st.session_state.drafts:
+        st.subheader("Saved Draft for this email")
+        st.code(st.session_state.drafts[email_id])
 
 with tab2:
-    st.title("AI Email Agent")
+    st.title("Email Agent")
 
     mode = st.radio("Choose context mode:", ["Single Email", "Entire Mailbox"], horizontal=True)
 
     if mode == "Single Email":
-        subject2 = st.selectbox(
-            "Select email for agent context",
+        selected_subject2 = st.selectbox(
+            "Select email for context",
             [e["subject"] for e in MOCK_EMAILS],
-            key="agent_subject"
+            key="agent_email"
         )
-        ctx_email = next(e for e in MOCK_EMAILS if e["subject"] == subject2)
+        e2 = next(e for e in MOCK_EMAILS if e["subject"] == selected_subject2)
 
-        st.write("### Email Context")
-        st.write(f"**Subject:** {ctx_email['subject']}")
-        st.write(f"**From:** {ctx_email['from']}")
-        st.write(f"**Timestamp:** {ctx_email['timestamp']}")
-        st.write(ctx_email["body"])
+        st.write("Email Context")
+        st.write(f"From: {e2['from']}")
+        st.write(e2["body"])
 
     else:
-        st.write("### Entire Mailbox")
-        st.info(f"Loaded {len(MOCK_EMAILS)} emails.")
+        st.write("Using Entire Mailbox as context")
+        st.info(f"Total emails loaded: {len(MOCK_EMAILS)}")
 
-    
     for role, msg in st.session_state.chat_history:
-        st.chat_message(role).write(msg)
+        if role == "user":
+            st.chat_message("user").write(msg)
+        else:
+            st.chat_message("assistant").write(msg)
 
-    
-    user_msg = st.chat_input("Ask a question about your email(s)…")
+    prompt_text = (
+        "Ask something about this email…" if mode == "Single Email"
+        else "Ask something about your entire mailbox…"
+    )
 
-    if user_msg:
-        st.session_state.chat_history.append(("user", user_msg))
+    user_input = st.chat_input(prompt_text)
+
+    if user_input:
+        st.session_state.chat_history.append(("user", user_input))
 
         if mode == "Single Email":
-            formatted = f"{PROMPTS['agent_prompt']}\n\nUser Question: {user_msg}"
-            output = ask_gemini(formatted, email=ctx_email)
+            full_prompt = f"{PROMPTS['agent_prompt']}\n\nUser question: {user_input}"
+            response = ask_gemini(full_prompt, email=e2)
         else:
-            formatted = f"{PROMPTS['agent_prompt']}\n\nMailbox Question: {user_msg}"
-            output = ask_gemini(formatted, all_emails=MOCK_EMAILS)
+            full_prompt = f"{PROMPTS['agent_prompt']}\n\nUser question (mailbox): {user_input}"
+            response = ask_gemini(full_prompt, all_emails=MOCK_EMAILS)
 
-        st.session_state.chat_history.append(("assistant", output))
+        st.session_state.chat_history.append(("assistant", response))
+        st.rerun()
 
 with tab3:
     st.title("Prompt Configuration")
+    st.write("Edit and save your prompts dynamically.")
 
     new_cat = st.text_area("Categorization Prompt", PROMPTS["categorize_prompt"])
     new_action = st.text_area("Action Extraction Prompt", PROMPTS["action_prompt"])
@@ -183,14 +165,13 @@ with tab3:
     new_agent = st.text_area("Agent Prompt", PROMPTS["agent_prompt"])
 
     if st.button("Save Prompts"):
-        updated = {
-            "categorize_prompt": new_cat,
-            "action_prompt": new_action,
-            "reply_prompt": new_reply,
-            "agent_prompt": new_agent
-        }
+        PROMPTS["categorize_prompt"] = new_cat
+        PROMPTS["action_prompt"] = new_action
+        PROMPTS["reply_prompt"] = new_reply
+        PROMPTS["agent_prompt"] = new_agent
+
         with open("prompts.json", "w") as f:
-            json.dump(updated, f, indent=4)
+            json.dump(PROMPTS, f, indent=4)
 
         st.success("Prompts saved!")
 
